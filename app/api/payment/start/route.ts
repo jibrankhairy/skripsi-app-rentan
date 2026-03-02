@@ -354,6 +354,30 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const mockWebhookPayload = {
+      reference: data.data.reference,
+      merchant_ref: data.data.merchant_ref,
+      payment_method: data.data.payment_name, // Dinamis ngambil nama metode (Misal: BRI Virtual Account)
+      payment_method_code: data.data.payment_method, // Dinamis ngambil kode (Misal: BRIVA)
+      total_amount: data.data.amount, // Dinamis ngambil total tagihan
+      fee_merchant: data.data.fee_merchant, // Dinamis ngambil fee merchant
+      fee_customer: data.data.fee_customer, // Dinamis ngambil fee customer
+      total_fee: data.data.total_fee, // Dinamis ngambil total fee
+      amount_received: data.data.amount_received, // Dinamis ngambil uang bersih
+      is_closed_payment: data.data.is_closed_payment ?? 1,
+      status: "UNPAID", // Tetap UNPAID agar bisa didemokan mengubah status menjadi PAID di Postman
+      paid_at: null, // Karena masih unpaid, waktu bayarnya null
+      note: "Simulated webhook payload for penetration testing",
+    };
+
+    console.log("\n[DEBUG] --- GENERATED MOCK WEBHOOK PAYLOAD ---");
+    console.log(
+      "Description: Payload generated for Webhook Spoofing simulation.",
+    );
+    console.log("Action: Copy the JSON below for API testing.");
+    console.log(JSON.stringify(mockWebhookPayload, null, 2));
+    console.log("----------------------------------------------\n");
+
     return NextResponse.json({
       success: true,
       payment: updated,

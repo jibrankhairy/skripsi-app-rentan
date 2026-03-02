@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyTripaySignature } from "@/lib/security/hmacVerifier";
-import { checkIdempotency } from "@/lib/security/redisIdempotency";
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Ekstraksi dan Validasi Payload Dasar
     const rawBody = await req.text();
     const body = JSON.parse(rawBody);
     const { reference, status, total_amount, merchant_ref } = body;
@@ -17,45 +14,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const headerSignature = req.headers.get("x-callback-signature");
-
-    // Logging payload untuk keperluan audit sistem
     console.log(
       `\n[Webhook HTTP POST] Menerima payload untuk: ${merchant_ref}`,
     );
-    console.log(`[Signature Header] ${headerSignature}`);
+    console.warn(
+      "⚠️ [VULNERABLE MODE] Memproses request langsung ke Database tanpa perlindungan keamanan!",
+    );
 
-    // 2. Environment Switch (Pengujian Kerentanan Sistem)
-    const isSecurityOn = process.env.SECURITY_MODE === "ON";
-
-    if (isSecurityOn) {
-      // Lapisan Keamanan 1: Autentikasi Kriptografi HMAC
-      const isAuthentic = verifyTripaySignature(rawBody, body, headerSignature);
-      if (!isAuthentic) {
-        return NextResponse.json(
-          { success: false, message: "Invalid signature" },
-          { status: 400 },
-        );
-      }
-
-      // Lapisan Keamanan 2: Idempotency Lock (Mitigasi Race Condition)
-      const isSafeToProcess = await checkIdempotency(merchant_ref);
-      if (!isSafeToProcess) {
-        return NextResponse.json(
-          { success: false, message: "Conflict / Duplicate Request Detected" },
-          { status: 409 },
-        );
-      }
-      console.log(
-        "[Security] Transaksi lolos verifikasi berlapis (HMAC & Redis).",
-      );
-    } else {
-      console.warn(
-        "[System Alert] Sistem berjalan tanpa perlindungan keamanan (SECURITY_MODE=OFF).",
-      );
-    }
-
-    // 3. Eksekusi Kueri Pembaruan Database (Prisma ORM)
     const paymentId = Number(merchant_ref.split("-")[1]);
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId },
@@ -68,9 +33,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let newStatus: "SUCCESS" | "FAILED" | "PENDING" = "PENDING";
-    if (["PAID", "SETTLED", "SUCCESS"].includes(status)) newStatus = "SUCCESS";
-    else if (["EXPIRED", "FAILED", "REFUND"].includes(status))
+    const tripayStatus = status.toUpperCase();
+    let newStatus = "PENDING";
+    if (["PAID", "SETTLED", "SUCCESS"].includes(tripayStatus))
+      newStatus = "SUCCESS";
+    else if (["EXPIRED", "FAILED", "REFUND", "UNPAID"].includes(tripayStatus))
       newStatus = "FAILED";
 
     const updatedPayment = await prisma.payment.update({
@@ -83,7 +50,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 4. Eksekusi Logika Bisnis (Pencetakan Akses Tes)
     if (newStatus === "SUCCESS") {
       await prisma.testAttempt.create({
         data: {
@@ -95,7 +61,7 @@ export async function POST(req: NextRequest) {
         },
       });
       console.log(
-        `[System Info] Akses Token Tes berhasil dicetak untuk Transaksi ${paymentId}.`,
+        `🎟️ [System Info] 1 Akses Token Tes dicetak untuk Transaksi ${paymentId}.`,
       );
     }
 
