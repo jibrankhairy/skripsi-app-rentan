@@ -17,9 +17,6 @@ export async function POST(req: NextRequest) {
     console.log(
       `\n[Webhook HTTP POST] Menerima payload untuk: ${merchant_ref}`,
     );
-    console.warn(
-      "⚠️ [VULNERABLE MODE] Memproses request langsung ke Database tanpa perlindungan keamanan!",
-    );
 
     const paymentId = Number(merchant_ref.split("-")[1]);
     const payment = await prisma.payment.findUnique({
