@@ -39,8 +39,11 @@ function DashboardInner() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search")?.toLowerCase() || "";
 
+  // const filteredTests = tests
+  //   .filter((t) => {
   const filteredTests = tests
-    .filter((t) => {
+  .filter((t) => !t.comingSoon) // ⬅️ WAJIB untuk Tripay
+  .filter((t) => {
       const q = searchQuery.trim();
       if (!q) {
         return !showAvailableOnly || !t.comingSoon;

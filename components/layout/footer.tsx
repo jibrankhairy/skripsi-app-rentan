@@ -28,7 +28,7 @@ export default function Footer() {
       </div>
 
       {/* 💙 Background Gradient */}
-<div className="bg-gradient-to-r from-[#3B0764] via-[#1E3A8A] to-[#0F172A] relative pt-20 pb-10 overflow-hidden">
+<div className="bg-gradient-to-r from-[#3B0764] via-[#1E3A8A] to-[#0F172A] relative pt-14 pb-6 overflow-hidden">
         {/* 🌌 Parallax Blobs */}
      <div className="absolute top-10 left-0 w-80 h-80 bg-purple-700/25 rounded-full blur-3xl -z-10 animate-[float_12s_ease-in-out_infinite]" />
 <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-700/25 rounded-full blur-3xl -z-10 animate-[float_15s_ease-in-out_infinite_alternate]" />
@@ -39,9 +39,9 @@ export default function Footer() {
   {/* 🏥 Logo & Deskripsi */}
   <div className="flex flex-col justify-start transition-transform duration-300 hover:scale-[1.02]">
 <div className="flex items-center gap-5">
-  <div className="relative w-[100px] h-[100px] sm:w-[200px] sm:h-[200px] flex-shrink-0 drop-shadow-lg">
+  <div className="relative w-[120px] h-[120px] sm:w-[160px] sm:h-[160px] flex-shrink-0 drop-shadow-lg">
     <Image
-      src="/logoklinik.png"
+      src="/logoklinik21.png"
       alt="Logo Klinik Yuliarpan Medika"
       fill
       className="object-contain"
@@ -75,11 +75,11 @@ export default function Footer() {
 
   {/* 📞 Contact Us */}
   <div className="flex flex-col justify-start md:items-start ml-30">
-    <h4 className="text-2xl font-semibold mb-5 flex items-center gap-3 text-white drop-shadow-sm mt-20">
+    <h4 className="text-2xl font-semibold mb-5 flex items-center gap-3 text-white drop-shadow-sm mt-4">
       <Mail className="w-6 h-6 text-blue-200" />
       Contact Us
     </h4>
-    <ul className="space-y-3 text-blue-100">
+    <ul className="space-y-1 text-blue-100">
       <li className="flex items-start gap-3 hover:text-white transition-all">
         <MapPin className="w-5 h-5 mt-1 text-blue-200 flex-shrink-0" />
         Jalan Raya Setu No.149, Cibuntu, Cibitung, Bekasi, Jawa Barat 17520.
@@ -97,11 +97,11 @@ export default function Footer() {
 
   {/* ⏰ Jam Layanan */}
   <div className="flex flex-col justify-start md:items-start ml-30">
-    <h4 className="text-2xl font-semibold mb-5 flex items-center gap-3 text-white drop-shadow-sm mt-18">
+    <h4 className="text-2xl font-semibold mb-5 flex items-center gap-3 text-white drop-shadow-sm mt-4">
       <Clock className="w-6 h-6 text-blue-200" />
       Jam Layanan
     </h4>
-    <ul className="space-y-2 text-blue-100">
+    <ul className="space-y-1 text-blue-100">
       <li>
         <strong>Poli Umum:</strong> Senin–Minggu • 24 Jam
       </li>
@@ -127,13 +127,27 @@ export default function Footer() {
 
 
         {/* 🔹 Footer Bottom */}
-        <div className="mt-12 border-t border-blue-400/40 pt-6 text-center text-blue-100 text-sm tracking-wide">
-          &copy; {new Date().getFullYear()}{" "}
-          <span className="font-medium text-white">
-            Klinik Yuliarpan Medika
-          </span>{" "}
-          — PT. Sudami Jaya Medika. All rights reserved.
-        </div>
+<div className="mt-8 border-t border-blue-400/40 pt-4 text-center text-blue-100 text-sm tracking-wide">
+  <div className="mb-2 flex justify-center gap-4 flex-wrap">
+    <a href="/about" className="hover:text-white transition">
+      Tentang Kami
+    </a>
+    <span>|</span>
+    <a href="/privacy-policy" className="hover:text-white transition">
+      Kebijakan Privasi
+    </a>
+    <span>|</span>
+    <a href="/terms" className="hover:text-white transition">
+      Ketentuan Layanan
+    </a>
+  </div>
+
+  &copy; {new Date().getFullYear()}{" "}
+  <span className="font-medium text-white">
+    Klinik Yuliarpan Medika
+  </span>{" "}
+  — PT. Sudami Jaya Medika. All rights reserved.
+</div>
       </div>
 
       {/* 🌀 Floating Animation Keyframes */}

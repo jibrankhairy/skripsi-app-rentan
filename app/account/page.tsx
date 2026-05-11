@@ -1,10 +1,10 @@
-'use client';
+"use client";
 import { useToast } from "@/components/ui/use-toast";
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/toaster";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import EditProfile from '@/components/account/editprofile';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import EditProfile from "@/components/account/editprofile";
 
 interface User {
   id: number;
@@ -14,9 +14,9 @@ interface User {
   birthDate?: string;
   createdAt?: string;
   updatedAt?: string;
-  profileImage?: string; 
+  profileImage?: string;
   ttdUrl?: string;
-  lembagalayanan?:string;
+  lembagalayanan?: string;
   strNumber?: number;
   sippNumber?: number;
   phone?: number;
@@ -34,31 +34,30 @@ export default function AccountPage() {
   const [savedTtd, setSavedTtd] = useState<string>(""); // Untuk TTD yang sudah tersimpan
   const [isSavingTtd, setIsSavingTtd] = useState(false);
   const router = useRouter();
-const [currentPage, setCurrentPage] = useState(1);
-const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
-// Hitung pagination
-const indexOfLastRow = currentPage * rowsPerPage;
-const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-const paginatedTests = testHistory.slice(indexOfFirstRow, indexOfLastRow);
-const { toast } = useToast();
-
+  // Hitung pagination
+  const indexOfLastRow = currentPage * rowsPerPage;
+  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  const paginatedTests = testHistory.slice(indexOfFirstRow, indexOfLastRow);
+  const { toast } = useToast();
 
   // 🔹 Ambil user via API middleware
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        const res = await fetch("/api/auth/me", { credentials: "include" });
         if (!res.ok) {
-          router.push('/login');
+          router.push("/login");
           return;
         }
         const data = await res.json();
-        if (!data.user) router.push('/login');
+        if (!data.user) router.push("/login");
         else {
           setUser(data.user);
           console.log("Fetched user with ttdUrl:", data.user.ttdUrl);
-                console.log("TTD saved (partial):", data.user.ttdUrl?.slice(0, 50));
+          console.log("TTD saved (partial):", data.user.ttdUrl?.slice(0, 50));
 
           // Set savedTtd dengan ttdUrl yang ada
           setSavedTtd(data.user.ttdUrl || "");
@@ -66,8 +65,8 @@ const { toast } = useToast();
           setTtdPreview("");
         }
       } catch (err) {
-        console.error('Error fetching user:', err);
-        router.push('/login');
+        console.error("Error fetching user:", err);
+        router.push("/login");
       } finally {
         setIsLoading(false);
       }
@@ -77,16 +76,21 @@ const { toast } = useToast();
 
   // 🔹 Ambil riwayat tes user
   useEffect(() => {
-    if (user && !["PSIKOLOG", "SUPERADMIN", "PERUSAHAAN"].includes(user.role || "")) {
+    if (
+      user &&
+      !["PSIKOLOG", "SUPERADMIN", "PERUSAHAAN"].includes(user.role || "")
+    ) {
       const fetchTestHistory = async () => {
         setIsLoadingHistory(true);
         try {
-          const res = await fetch(`/api/user/${user.id}/attempts`, { credentials: 'include' });
-          if (!res.ok) throw new Error('Gagal mengambil riwayat tes');
+          const res = await fetch(`/api/user/${user.id}/attempts`, {
+            credentials: "include",
+          });
+          if (!res.ok) throw new Error("Gagal mengambil riwayat tes");
           const data = await res.json();
           setTestHistory(data.attempts || []);
         } catch (err) {
-          console.error('Error fetching test history:', err);
+          console.error("Error fetching test history:", err);
           setTestHistory([]);
         } finally {
           setIsLoadingHistory(false);
@@ -97,9 +101,9 @@ const { toast } = useToast();
   }, [user]);
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     setUser(null);
-    router.push('/login');
+    router.push("/login");
   };
 
   const handleSaveSuccess = (updatedUser: User) => {
@@ -114,13 +118,14 @@ const { toast } = useToast();
     if (!file) return;
 
     // Validasi file
-    if (!file.type.startsWith('image/')) {
-      alert('Hanya file gambar yang diperbolehkan');
+    if (!file.type.startsWith("image/")) {
+      alert("Hanya file gambar yang diperbolehkan");
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) { // 2MB
-      alert('Ukuran file maksimal 2MB');
+    if (file.size > 2 * 1024 * 1024) {
+      // 2MB
+      alert("Ukuran file maksimal 2MB");
       return;
     }
 
@@ -132,70 +137,70 @@ const { toast } = useToast();
   };
 
   // Simpan TTD ke database
-const handleSaveTtd = async () => {
-  if (!ttdPreview || ttdPreview.trim() === "") {
-    toast({
-      title: "Gagal Menyimpan",
-      description: "Silakan pilih file TTD terlebih dahulu!",
-      variant: "warning",
-      position: "center",
-      duration: 3000,
-    });
-    return;
-  }
-
-  if (!user?.id) {
-    toast({
-      title: "Gagal Menyimpan",
-      description: "User ID tidak ditemukan!",
-      variant: "error",
-      position: "center",
-      duration: 3000,
-    });
-    return;
-  }
-
-  setIsSavingTtd(true);
-  try {
-    const res = await fetch("/api/update-ttd", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
-        userId: user.id,
-        ttd: ttdPreview,
-      }),
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || "Gagal menyimpan TTD");
+  const handleSaveTtd = async () => {
+    if (!ttdPreview || ttdPreview.trim() === "") {
+      toast({
+        title: "Gagal Menyimpan",
+        description: "Silakan pilih file TTD terlebih dahulu!",
+        variant: "warning",
+        position: "center",
+        duration: 3000,
+      });
+      return;
     }
 
-    setUser((prev) => (prev ? { ...prev, ttdUrl: ttdPreview } : prev));
-    setSavedTtd(ttdPreview);
-    setTtdPreview("");
+    if (!user?.id) {
+      toast({
+        title: "Gagal Menyimpan",
+        description: "User ID tidak ditemukan!",
+        variant: "error",
+        position: "center",
+        duration: 3000,
+      });
+      return;
+    }
 
-    toast({
-      title: "Berhasil",
-      description: "TTD berhasil disimpan!",
-      variant: "success",
-      position: "center",
-      duration: 3000,
-    });
-  } catch (err: any) {
-    console.error("Error saving TTD:", err);
-    toast({
-      title: "Gagal Menyimpan",
-      description: err.message || "Terjadi kesalahan saat menyimpan TTD.",
-      variant: "error",
-      position: "center",
-      duration: 3000,
-    });
-  } finally {
-    setIsSavingTtd(false);
-  }
-};
+    setIsSavingTtd(true);
+    try {
+      const res = await fetch("/api/update-ttd", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          userId: user.id,
+          ttd: ttdPreview,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Gagal menyimpan TTD");
+      }
+
+      setUser((prev) => (prev ? { ...prev, ttdUrl: ttdPreview } : prev));
+      setSavedTtd(ttdPreview);
+      setTtdPreview("");
+
+      toast({
+        title: "Berhasil",
+        description: "TTD berhasil disimpan!",
+        variant: "success",
+        position: "center",
+        duration: 3000,
+      });
+    } catch (err: any) {
+      console.error("Error saving TTD:", err);
+      toast({
+        title: "Gagal Menyimpan",
+        description: err.message || "Terjadi kesalahan saat menyimpan TTD.",
+        variant: "error",
+        position: "center",
+        duration: 3000,
+      });
+    } finally {
+      setIsSavingTtd(false);
+    }
+  };
 
   // Reset TTD
   const handleResetTtd = () => {
@@ -214,8 +219,8 @@ const handleSaveTtd = async () => {
   //       method: "POST",
   //       headers: { "Content-Type": "application/json" },
   //       credentials: "include",
-  //       body: JSON.stringify({ 
-  //         userId: user?.id, 
+  //       body: JSON.stringify({
+  //         userId: user?.id,
   //         ttd: "" // Kosongkan TTD
   //       }),
   //     });
@@ -241,7 +246,7 @@ const handleSaveTtd = async () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
-        <p className="text-lg font-medium text-gray-700">Loading profil...</p>
+        <p className="text-lg font-medium text-gray-700">Loading...</p>
       </div>
     );
   }
@@ -255,41 +260,47 @@ const handleSaveTtd = async () => {
 
         {/* Profil Utama */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8 flex items-center space-x-6">
-<div className="relative w-24 h-24 rounded-full overflow-hidden border-2 flex items-center justify-center bg-blue-600 text-white text-3xl font-semibold">
-  {user.profileImage ? (
-    <img
-      src={user.profileImage}
-      alt="Profile"
-      className="w-full h-full object-cover"
-    />
-  ) : (
-    <span>
-      {user.fullName
-  ? (() => {
-      const parts = user.fullName.trim().split(' ');
-      const first = parts[0]?.[0] || '';
-      const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
-      return (first + last).toUpperCase();
-    })()
-  : '?'}
-
-    </span>
-  )}
-</div>
-
+          <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 flex items-center justify-center bg-blue-600 text-white text-3xl font-semibold">
+            {user.profileImage ? (
+              <img
+                src={user.profileImage}
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span>
+                {user.fullName
+                  ? (() => {
+                      const parts = user.fullName.trim().split(" ");
+                      const first = parts[0]?.[0] || "";
+                      const last =
+                        parts.length > 1 ? parts[parts.length - 1][0] : "";
+                      return (first + last).toUpperCase();
+                    })()
+                  : "?"}
+              </span>
+            )}
+          </div>
 
           <div className="flex-grow">
-            <h2 className="text-xl font-semibold text-gray-900">{user.fullName || 'Nama Pengguna'}</h2>
-            <p className="text-sm text-gray-600">{user.role || 'User'}</p>
+            <h2 className="text-xl font-semibold text-gray-900">
+              {user.fullName || "Nama Pengguna"}
+            </h2>
+            <p className="text-sm text-gray-600">{user.role || "User"}</p>
           </div>
 
           <div>
-            <button 
-              onClick={() => setIsEditing(true)} 
+            <button
+              onClick={() => setIsEditing(true)}
               className="flex items-center space-x-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
             >
               <span>Edit profile</span>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-4 h-4"
+              >
                 <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.187 1.187 3.712 3.712 1.187-1.187a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32l8.4-8.4z" />
                 <path d="M5.25 5.25a3 3 0 003 3h.25a2.25 2.25 0 002.25-2.25V6a2.25 2.25 0 00-2.25-2.25H8.25a3 3 0 00-3 3z" />
               </svg>
@@ -300,12 +311,14 @@ const handleSaveTtd = async () => {
         {/* TTD Section - hanya untuk PSIKOLOG */}
         {user.role === "PSIKOLOG" && (
           <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Tanda Tangan Digital</h3> 
-            
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Tanda Tangan Digital
+            </h3>
+
             {/* TTD yang sudah tersimpan */}
             {savedTtd && (
               <div className="mb-6">
-              {/*  <label className="block text-sm font-medium text-gray-700 mb-2">
+                {/*  <label className="block text-sm font-medium text-gray-700 mb-2">
                   TTD Tersimpan:
                 </label> */}
                 {/* 
@@ -338,7 +351,7 @@ const handleSaveTtd = async () => {
               <h4 className="text-md font-medium text-gray-900 mb-4">
                 {savedTtd ? "Ganti TTD:" : "Upload TTD Baru:"}
               </h4>
-              
+
               {/* Preview file baru */}
               {ttdPreview && (
                 <div className="mb-4">
@@ -346,16 +359,14 @@ const handleSaveTtd = async () => {
                     Preview File Baru:
                   </label>
                   <div className="border border-gray-200 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden">
-<div className="flex justify-center">
-  <img
-    src={ttdPreview}
-    alt="TTD Tersimpan"
-    className="w-40 h-auto object-contain rounded-md shadow"
-  />
-</div>
-
-</div>
-
+                    <div className="flex justify-center">
+                      <img
+                        src={ttdPreview}
+                        alt="TTD Tersimpan"
+                        className="w-40 h-auto object-contain rounded-md shadow"
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -379,13 +390,17 @@ const handleSaveTtd = async () => {
                   disabled={!ttdPreview || isSavingTtd}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                     ttdPreview && !isSavingTtd
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
                 >
-                  {isSavingTtd ? 'Menyimpan...' : (savedTtd ? 'Ganti TTD' : 'Simpan TTD')}
+                  {isSavingTtd
+                    ? "Menyimpan..."
+                    : savedTtd
+                      ? "Ganti TTD"
+                      : "Simpan TTD"}
                 </button>
-                
+
                 {ttdPreview && (
                   <button
                     onClick={handleResetTtd}
@@ -401,7 +416,8 @@ const handleSaveTtd = async () => {
               {savedTtd && (
                 <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-sm text-green-700">
-                    ✓ TTD telah tersimpan dan akan digunakan untuk validasi dokumen
+                    ✓ TTD telah tersimpan dan akan digunakan untuk validasi
+                    dokumen
                   </p>
                 </div>
               )}
@@ -409,247 +425,335 @@ const handleSaveTtd = async () => {
           </div>
         )}
 
-{/* 🌟 Informasi Pribadi */}
-<div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-  <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
-    <h3 className="text-lg font-semibold text-gray-900">Personal Information</h3>
-  </div>
-
-  {/* USER */}
-  {user.role === "USER" && (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-      <div>
-        <label className="block text-gray-500">Full Name</label>
-        <p className="font-medium text-gray-800">{user.fullName || "N/A"}</p>
-      </div>
-      <div>
-        <label className="block text-gray-500">Date of Birth</label>
-        <p className="font-medium text-gray-800">
-          {user.birthDate
-            ? new Date(user.birthDate).toLocaleDateString("id-ID", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              })
-            : "N/A"}
-        </p>
-      </div>
-      <div>
-        <label className="block text-gray-500">Email</label>
-        <p className="font-medium text-gray-800">{user.email || "N/A"}</p>
-      </div>
-      <div>
-        <label className="block text-gray-500">Education</label>
-        <p className="font-medium text-gray-800">{user.education || "N/A"}</p>
-      </div>
-    </div>
-  )}
-
-  {/* PSIKOLOG */}
-  {user.role === "PSIKOLOG" && (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-      <div>
-        <label className="block text-gray-500">Full Name</label>
-        <p className="font-medium text-gray-800">{user.fullName || "N/A"}</p>
-      </div>
-      <div>
-        <label className="block text-gray-500">Email</label>
-        <p className="font-medium text-gray-800">{user.email || "N/A"}</p>
-      </div>
-      <div>
-        <label className="block text-gray-500">Fasyankes / Lembaga Layanan Psikologi</label>
-        <p className="font-medium text-gray-800">{user.lembagalayanan || "N/A"}</p>
-      </div>
-      <div>
-        <label className="block text-gray-500">Nomor STR / SIK</label>
-        <p className="font-medium text-gray-800">{user.strNumber || "N/A"}</p>
-      </div>
-      <div>
-        <label className="block text-gray-500">Nomor SIPP / SIPPK</label>
-        <p className="font-medium text-gray-800">{user.sippNumber || "N/A"}</p>
-      </div>
-    </div>
-  )}
-
-  {/* PERUSAHAAN */}
-  {user.role === "PERUSAHAAN" && (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-      <div>
-        <label className="block text-gray-500">Full Name</label>
-        <p className="font-medium text-gray-800">{user.fullName || "N/A"}</p>
-      </div>
-      <div>
-        <label className="block text-gray-500">Email</label>
-        <p className="font-medium text-gray-800">{user.email || "N/A"}</p>
-      </div>
-      <div>
-        <label className="block text-gray-500">Address</label>
-        <p className="font-medium text-gray-800">{user.address || "N/A"}</p>
-      </div>
-      <div>
-        <label className="block text-gray-500">Phone</label>
-        <p className="font-medium text-gray-800">{user.phone || "N/A"}</p>
-      </div>
-    </div>
-  )}
-
-  {/* ADMIN / SUPERADMIN */}
-  {(user.role === "SUPERADMIN" || user.role === "ADMIN") && (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-      <div>
-        <label className="block text-gray-500">Full Name</label>
-        <p className="font-medium text-gray-800">{user.fullName || "N/A"}</p>
-      </div>
-      <div>
-        <label className="block text-gray-500">Email</label>
-        <p className="font-medium text-gray-800">{user.email || "N/A"}</p>
-      </div>
-    </div>
-  )}
-</div>
-
-
-      {/* Riwayat Tes hanya untuk role "USER" biasa */}
-{!["PSIKOLOG", "SUPERADMIN", "PERUSAHAAN"].includes(user.role || "") && (
-  <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-    <h3 className="text-lg font-semibold text-gray-900 mb-4">Riwayat Tes</h3>
-
-    {/* Statistik ringkasan tes */}
-    {!isLoadingHistory && testHistory.length > 0 && (() => {
-      const totalTes = testHistory.length;
-      const totalSelesai = testHistory.filter(t => t.status === "Selesai").length;
-      const totalVerifikasi = testHistory.filter(t => t.status === "Sedang diverifikasi psikolog").length;
-      const totalDikerjakan = testHistory.filter(t => t.status === "Dikerjakan").length || 0; // opsional jika ada status ini
-
-      return (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg text-center">
-            <p className="text-xs text-blue-600 font-medium">Total Tes Dibeli</p>
-            <p className="text-2xl font-bold text-blue-700">{totalTes}</p>
+        {/* 🌟 Informasi Pribadi */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Personal Information
+            </h3>
           </div>
-          <div className="bg-yellow-50 p-4 rounded-lg text-center">
-            <p className="text-xs text-yellow-600 font-medium">Sedang Diverifikasi</p>
-            <p className="text-2xl font-bold text-yellow-700">{totalVerifikasi}</p>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg text-center">
-            <p className="text-xs text-green-600 font-medium">Tes Selesai</p>
-            <p className="text-2xl font-bold text-green-700">{totalSelesai}</p>
-          </div>
-          <div className="bg-gray-50 p-4 rounded-lg text-center">
-            <p className="text-xs text-gray-600 font-medium">Sedang Dikerjakan</p>
-            <p className="text-2xl font-bold text-gray-700">{totalDikerjakan}</p>
-          </div>
+
+          {/* USER */}
+          {user.role === "USER" && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+              <div>
+                <label className="block text-gray-500">Full Name</label>
+                <p className="font-medium text-gray-800">
+                  {user.fullName || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-gray-500">Date of Birth</label>
+                <p className="font-medium text-gray-800">
+                  {user.birthDate
+                    ? new Date(user.birthDate).toLocaleDateString("id-ID", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      })
+                    : "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-gray-500">Email</label>
+                <p className="font-medium text-gray-800">
+                  {user.email || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-gray-500">Education</label>
+                <p className="font-medium text-gray-800">
+                  {user.education || "N/A"}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* PSIKOLOG */}
+          {user.role === "PSIKOLOG" && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+              <div>
+                <label className="block text-gray-500">Full Name</label>
+                <p className="font-medium text-gray-800">
+                  {user.fullName || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-gray-500">Email</label>
+                <p className="font-medium text-gray-800">
+                  {user.email || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-gray-500">
+                  Fasyankes / Lembaga Layanan Psikologi
+                </label>
+                <p className="font-medium text-gray-800">
+                  {user.lembagalayanan || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-gray-500">Nomor STR / SIK</label>
+                <p className="font-medium text-gray-800">
+                  {user.strNumber || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-gray-500">
+                  Nomor SIPP / SIPPK
+                </label>
+                <p className="font-medium text-gray-800">
+                  {user.sippNumber || "N/A"}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* PERUSAHAAN */}
+          {user.role === "PERUSAHAAN" && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+              <div>
+                <label className="block text-gray-500">Full Name</label>
+                <p className="font-medium text-gray-800">
+                  {user.fullName || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-gray-500">Email</label>
+                <p className="font-medium text-gray-800">
+                  {user.email || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-gray-500">Address</label>
+                <p className="font-medium text-gray-800">
+                  {user.address || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-gray-500">Phone</label>
+                <p className="font-medium text-gray-800">
+                  {user.phone || "N/A"}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ADMIN / SUPERADMIN */}
+          {(user.role === "SUPERADMIN" || user.role === "ADMIN") && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+              <div>
+                <label className="block text-gray-500">Full Name</label>
+                <p className="font-medium text-gray-800">
+                  {user.fullName || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="block text-gray-500">Email</label>
+                <p className="font-medium text-gray-800">
+                  {user.email || "N/A"}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
-      );
-    })()}
 
-    {/* Pagination dan jumlah baris */}
-    <div className="flex justify-between items-center mb-4">
-      <div>
-        <label className="text-sm text-gray-700 mr-2">Rows per page:</label>
-        <select
-          value={rowsPerPage}
-          onChange={(e) => {
-            setRowsPerPage(parseInt(e.target.value));
-            setCurrentPage(1);
-          }}
-          className="border border-gray-300 rounded-md text-sm px-2 py-1"
-        >
-          <option value={10}>10</option>
-          <option value={20}>20</option>
-          <option value={50}>50</option>
-        </select>
-      </div>
-      <div className="text-sm text-gray-600">
-        Page {currentPage} of {Math.ceil(testHistory.length / rowsPerPage) || 1}
-      </div>
-    </div>
+        {/* Riwayat Tes hanya untuk role "USER" biasa */}
+        {!["PSIKOLOG", "SUPERADMIN", "PERUSAHAAN"].includes(
+          user.role || "",
+        ) && (
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Riwayat Tes
+            </h3>
 
-    <div className="overflow-x-auto">
-      {isLoadingHistory ? (
-        <p className="text-center text-gray-500 py-4">Memuat riwayat...</p>
-      ) : testHistory.length > 0 ? (
-        <table className="min-w-full divide-y divide-gray-200 text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Nama Tes</th>
-              <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Tanggal Pengerjaan</th>
-              <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Status</th>
-               <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Hasil Test</th>
-              {/*<th className="px-6 py-3 relative"><span className="sr-only">Aksi</span></th> */ }
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {paginatedTests.map((historyItem) => (
-              <tr key={historyItem.id}>
-                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{historyItem.testType.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                  {new Date(historyItem.completedAt).toLocaleDateString('id-ID', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      historyItem.status === "Selesai"
-                        ? "bg-green-100 text-green-800"
-                        : historyItem.status === "Sedang diverifikasi psikolog"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    {historyItem.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right font-medium">
-                  {historyItem.status === "Selesai" ? (
-                    <a
-                      href={`/tes/hasil/${historyItem.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-900"
-                    >
-                      Lihat Hasil
-                    </a>
-                  ) : (
-                    "-"
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <p className="text-center text-gray-500 py-4">
-          Anda belum pernah mengerjakan tes apapun.
-        </p>
-      )}
-    </div>
+            {/* Statistik ringkasan tes */}
+            {!isLoadingHistory &&
+              testHistory.length > 0 &&
+              (() => {
+                const totalTes = testHistory.length;
+                const totalSelesai = testHistory.filter(
+                  (t) => t.status === "Selesai",
+                ).length;
+                const totalVerifikasi = testHistory.filter(
+                  (t) => t.status === "Sedang diverifikasi psikolog",
+                ).length;
+                const totalDikerjakan =
+                  testHistory.filter((t) => t.status === "Dikerjakan").length ||
+                  0; // opsional jika ada status ini
 
-    {/* Navigasi halaman */}
-    {!isLoadingHistory && testHistory.length > 0 && (
-      <div className="flex justify-between items-center mt-4">
-        <button
-          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-          disabled={currentPage === 1}
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md disabled:opacity-50 hover:bg-gray-200 transition"
-        >
-          Prev
-        </button>
-        <button
-          onClick={() => setCurrentPage((p) => Math.min(Math.ceil(testHistory.length / rowsPerPage), p + 1))}
-          disabled={currentPage === Math.ceil(testHistory.length / rowsPerPage)}
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md disabled:opacity-50 hover:bg-gray-200 transition"
-        >
-          Next
-        </button>
-      </div>
-    )}
-  </div>
-)}
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-blue-50 p-4 rounded-lg text-center">
+                      <p className="text-xs text-blue-600 font-medium">
+                        Total Tes Dibeli
+                      </p>
+                      <p className="text-2xl font-bold text-blue-700">
+                        {totalTes}
+                      </p>
+                    </div>
+                    <div className="bg-yellow-50 p-4 rounded-lg text-center">
+                      <p className="text-xs text-yellow-600 font-medium">
+                        Sedang Diverifikasi
+                      </p>
+                      <p className="text-2xl font-bold text-yellow-700">
+                        {totalVerifikasi}
+                      </p>
+                    </div>
+                    <div className="bg-green-50 p-4 rounded-lg text-center">
+                      <p className="text-xs text-green-600 font-medium">
+                        Tes Selesai
+                      </p>
+                      <p className="text-2xl font-bold text-green-700">
+                        {totalSelesai}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg text-center">
+                      <p className="text-xs text-gray-600 font-medium">
+                        Sedang Dikerjakan
+                      </p>
+                      <p className="text-2xl font-bold text-gray-700">
+                        {totalDikerjakan}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()}
 
+            {/* Pagination dan jumlah baris */}
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <label className="text-sm text-gray-700 mr-2">
+                  Rows per page:
+                </label>
+                <select
+                  value={rowsPerPage}
+                  onChange={(e) => {
+                    setRowsPerPage(parseInt(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="border border-gray-300 rounded-md text-sm px-2 py-1"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+              <div className="text-sm text-gray-600">
+                Page {currentPage} of{" "}
+                {Math.ceil(testHistory.length / rowsPerPage) || 1}
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              {isLoadingHistory ? (
+                <p className="text-center text-gray-500 py-4">
+                  Memuat riwayat...
+                </p>
+              ) : testHistory.length > 0 ? (
+                <table className="min-w-full divide-y divide-gray-200 text-sm">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+                        Nama Tes
+                      </th>
+                      <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+                        Tanggal Pengerjaan
+                      </th>
+                      <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+                        Hasil Test
+                      </th>
+                      {/*<th className="px-6 py-3 relative"><span className="sr-only">Aksi</span></th> */}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {paginatedTests.map((historyItem) => (
+                      <tr key={historyItem.id}>
+                        <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
+                          {historyItem.testType.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-gray-500">
+                          {new Date(historyItem.completedAt).toLocaleDateString(
+                            "id-ID",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            },
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              historyItem.status === "Selesai"
+                                ? "bg-green-100 text-green-800"
+                                : historyItem.status ===
+                                    "Sedang diverifikasi psikolog"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {historyItem.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right font-medium">
+                          {historyItem.status === "Selesai" ? (
+                            <a
+                              href={`/tes/hasil/${historyItem.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-900"
+                            >
+                              Lihat Hasil
+                            </a>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="text-center text-gray-500 py-4">
+                  Anda belum pernah mengerjakan tes apapun.
+                </p>
+              )}
+            </div>
+
+            {/* Navigasi halaman */}
+            {!isLoadingHistory && testHistory.length > 0 && (
+              <div className="flex justify-between items-center mt-4">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md disabled:opacity-50 hover:bg-gray-200 transition"
+                >
+                  Prev
+                </button>
+                <button
+                  onClick={() =>
+                    setCurrentPage((p) =>
+                      Math.min(
+                        Math.ceil(testHistory.length / rowsPerPage),
+                        p + 1,
+                      ),
+                    )
+                  }
+                  disabled={
+                    currentPage === Math.ceil(testHistory.length / rowsPerPage)
+                  }
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md disabled:opacity-50 hover:bg-gray-200 transition"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Tombol Logout */}
         <div className="mt-8 text-center">
@@ -669,8 +773,7 @@ const handleSaveTtd = async () => {
           />
         )}
       </div>
-          <Toaster />
-
+      <Toaster />
     </main>
   );
 }

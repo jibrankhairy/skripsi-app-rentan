@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     if (!testTypeId || !userId) {
       return NextResponse.json(
         { error: "Missing testTypeId or userId" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-   console.log("💰 Payment latest:", payment);
+    console.log("💰 Payment latest:", payment);
 
     return NextResponse.json({
       payment: payment
@@ -45,12 +45,11 @@ export async function GET(req: NextRequest) {
           }
         : null,
     });
-
   } catch (err: any) {
     console.error("❌ Error di /api/payment/latest:", err);
     return NextResponse.json(
       { error: "Gagal ambil payment terakhir", message: err.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

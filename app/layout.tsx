@@ -1,9 +1,10 @@
+// tester
+
 import type { Metadata } from "next";
 import { poppins, geistSans, geistMono } from "./font";
 import "./globals.css";
 import IdleLogout from "../components/idlelogout";
 import { Toaster } from "@/components/ui/toaster";
-
 
 export const metadata: Metadata = {
   title: "Psychotest App",
@@ -26,8 +27,7 @@ export default function RootLayout({
       <body className="antialiased">
         <IdleLogout />
         {children}
-                <Toaster />
-
+        <Toaster />
       </body>
     </html>
   );

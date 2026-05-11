@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
+  // Dapatkan IP address untuk keperluan Rate Limiting
+  const ip = req.headers.get("x-forwarded-for") || "unknown_ip";
+
   try {
     const rawBody = await req.text();
     const body = JSON.parse(rawBody);
@@ -17,7 +20,6 @@ export async function POST(req: NextRequest) {
     console.log(
       `\n[Webhook HTTP POST] Menerima payload untuk: ${merchant_ref}`,
     );
-
     const paymentId = Number(merchant_ref.split("-")[1]);
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId },

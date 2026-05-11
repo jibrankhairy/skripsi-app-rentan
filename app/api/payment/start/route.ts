@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       userId: targetUserId,
       method = "BRIVA",
       guestToken,
-      promoId, // ✅ TANGKAP promoId DARI FRONTEND
+      promoId,
     } = await req.json();
     console.log("DEBUG method from client:", method);
 
@@ -159,11 +159,8 @@ export async function POST(req: NextRequest) {
 
     if (!finalPrice || finalPrice <= 0) finalPrice = basePrice;
 
-    let totalAmount = finalPrice * quantity; // Masih harga setelah diskon admin (misal 120rb)
+    let totalAmount = finalPrice * quantity;
 
-    // ====================================================================
-    // ✅ TAMBAHAN: LOGIKA DISKON VOUCHER PROMO (Potong 120rb jadi 100rb)
-    // ====================================================================
     if (promoId) {
       const promoRecord = await prisma.promo.findUnique({
         where: { id: Number(promoId) },
@@ -180,14 +177,13 @@ export async function POST(req: NextRequest) {
             discountAmount = promoRecord.maxDiscount;
           }
         } else {
-          discountAmount = promoRecord.value; // Potong nominal
+          discountAmount = promoRecord.value;
         }
 
         totalAmount -= discountAmount;
-        if (totalAmount < 0) totalAmount = 0; // Pastikan gak minus
+        if (totalAmount < 0) totalAmount = 0;
       }
     }
-    // ====================================================================
 
     const finalUserId =
       decoded.role === "PERUSAHAAN" && targetUserId ? targetUserId : decoded.id;
@@ -242,7 +238,7 @@ export async function POST(req: NextRequest) {
     const payment = await prisma.payment.create({
       data: {
         testTypeId: test.id,
-        amount: totalAmount, // ✅ Masukin angka yang udah fix ke DB (100rb)
+        amount: totalAmount,
         status: totalAmount === 0 ? "FREE" : "PENDING",
         userId: finalUserId,
         companyId: decoded.role === "PERUSAHAAN" ? decoded.id : null,
