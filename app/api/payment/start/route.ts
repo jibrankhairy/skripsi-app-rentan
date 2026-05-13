@@ -366,13 +366,27 @@ export async function POST(req: NextRequest) {
       note: "Simulated webhook payload for penetration testing",
     };
 
+    // Kalkulasi Signature asli dari Tripay berdasarkan JSON Body
+    const jsonBody = JSON.stringify(mockWebhookPayload);
+    const callbackSignature = crypto
+      .createHmac("sha256", TRIPAY_PRIVATE_KEY)
+      .update(jsonBody)
+      .digest("hex");
+
     console.log("\n[DEBUG] --- GENERATED MOCK WEBHOOK PAYLOAD ---");
     console.log(
-      "Description: Payload generated for Webhook Spoofing simulation.",
+      "Description: Payload & Signature fresh siap untuk demo Webhook Spoofing.",
     );
-    console.log("Action: Copy the JSON below for API testing.");
-    console.log(JSON.stringify(mockWebhookPayload, null, 2));
-    console.log("----------------------------------------------\n");
+    console.log("Action: Copy Header dan Body di bawah ke Burp Suite.\n");
+
+    console.log("[HEADER X-Callback-Signature]");
+    console.log(callbackSignature);
+
+    console.log(
+      "\n[BODY JSON RAW] (Copy dari kurung kurawal awal sampai akhir)",
+    );
+    console.log(jsonBody);
+    console.log("\n----------------------------------------------\n");
 
     return NextResponse.json({
       success: true,
