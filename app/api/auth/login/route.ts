@@ -11,7 +11,10 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      return NextResponse.json({ error: "Email tidak ditemukan" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Email tidak ditemukan" },
+        { status: 401 },
+      );
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -21,10 +24,16 @@ export async function POST(req: Request) {
 
     // Buat token JWT
     const token = jwt.sign(
-      { id: user.id, email: user.email, fullName: user.fullName, role: user.role, birthDate: user.birthDate?.toISOString(),
-    profileImage: user.profileImage },
+      {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        birthDate: user.birthDate?.toISOString(),
+        profileImage: user.profileImage,
+      },
       JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "1d" },
     );
 
     // Simpan di cookie HttpOnly
@@ -41,7 +50,7 @@ export async function POST(req: Request) {
 
     res.cookies.set("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: false,
       sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 24, // 1 hari
@@ -50,6 +59,9 @@ export async function POST(req: Request) {
     return res;
   } catch (err) {
     console.error("Login error:", err);
-    return NextResponse.json({ error: "Terjadi kesalahan server" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Terjadi kesalahan server" },
+      { status: 500 },
+    );
   }
 }
