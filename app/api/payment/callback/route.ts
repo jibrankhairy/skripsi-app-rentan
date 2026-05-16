@@ -17,9 +17,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const headerSignature = req.headers.get("x-callback-signature");
+
     console.log(
-      `\n[Webhook HTTP POST] Menerima payload untuk: ${merchant_ref}`,
+      `\n[Webhook HTTP POST] Menerima payload dari Tripay untuk: ${merchant_ref}`,
     );
+    console.log(`[Signature Header]`);
+    console.log(headerSignature);
+    console.log(`[BODY JSON RAW]`);
+    console.log(rawBody);
+
     const paymentId = Number(merchant_ref.split("-")[1]);
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId },

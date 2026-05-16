@@ -353,16 +353,15 @@ export async function POST(req: NextRequest) {
     const mockWebhookPayload = {
       reference: data.data.reference,
       merchant_ref: data.data.merchant_ref,
-      payment_method: data.data.payment_name, // Dinamis ngambil nama metode (Misal: BRI Virtual Account)
-      payment_method_code: data.data.payment_method, // Dinamis ngambil kode (Misal: BRIVA)
-      total_amount: data.data.amount, // Dinamis ngambil total tagihan
-      fee_merchant: data.data.fee_merchant, // Dinamis ngambil fee merchant
-      fee_customer: data.data.fee_customer, // Dinamis ngambil fee customer
-      total_fee: data.data.total_fee, // Dinamis ngambil total fee
-      amount_received: data.data.amount_received, // Dinamis ngambil uang bersih
+      payment_method: data.data.payment_name,
+      payment_method_code: data.data.payment_method,
+      total_amount: data.data.amount,
+      fee_merchant: data.data.fee_merchant,
+      fee_customer: data.data.fee_customer,
+      total_fee: data.data.total_fee,
+      amount_received: data.data.amount_received,
       is_closed_payment: data.data.is_closed_payment ?? 1,
-      status: "UNPAID", // Tetap UNPAID agar bisa didemokan mengubah status menjadi PAID di Postman
-      paid_at: null, // Karena masih unpaid, waktu bayarnya null
+      status: "UNPAID",
       note: "Simulated webhook payload for penetration testing",
     };
 
@@ -374,19 +373,15 @@ export async function POST(req: NextRequest) {
       .digest("hex");
 
     console.log("\n[DEBUG] --- GENERATED MOCK WEBHOOK PAYLOAD ---");
-    console.log(
-      "Description: Payload & Signature fresh siap untuk demo Webhook Spoofing.",
-    );
+    console.log("Description: Payload & Signature.");
     console.log("Action: Copy Header dan Body di bawah ke Burp Suite.\n");
 
     console.log("[HEADER X-Callback-Signature]");
     console.log(callbackSignature);
-
     console.log(
       "\n[BODY JSON RAW] (Copy dari kurung kurawal awal sampai akhir)",
     );
     console.log(jsonBody);
-    console.log("\n----------------------------------------------\n");
 
     return NextResponse.json({
       success: true,
